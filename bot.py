@@ -4,12 +4,12 @@ import datetime as dt
 import sqlite3 as sql
 def file_exists(s):
     try:
-        file = open(s)
+        file = open(s,'r')
     except IOError as e:
         return False
     file.close()
     return True
-bot = telebot.TeleBot("462731102:AAGR4-uk6AiaGQyQdR1OM9Lp4TxTl37XDOw")
+bot = telebot.TeleBot("TOKEN")
 tmp = []
 lesson_id = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelvth','thirteenth','fourteenth','fifteenth','sixteenth','eighteenth','nineteenth','twentieth','twentyfirst','twentysecond','twentythird','twentyfourth','twentyfifth','twentysixth','twentyseventh','twentyeighth','twentyninth','thirtieth','thirtyfirst','thirtysecond','thirtythird','thirtyfourth','thirtyfifth']
 def day_of_week(d):
@@ -48,21 +48,27 @@ def all(message):
             if tmp[0] == "get":
                 conn = sql.connect("user_info")
                 c = conn.cursor()
-                g = c.execute("select gr from users where ids = ?", (str(message.chat.id)))
+                c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
+                g = c.fetchone()
                 gr = g[0]
                 s = gr+"_"+tmp[1]+"_"+message.text+".txt"
+                print(s)
                 conn.close()
-                ch = file_exists(tmp[1]+"_"+message.text+".txt")
+                ch = file_exists(s)
                 if not ch:
                     bot.send_message(message.chat.id, "На указанный урок нет домашнего задания")
                 else:
-                    doc = open(s, 'rb')
-                    bot.send_document(message.chat.id, doc)
+                    doc = open(s, 'r')
+                    s = ""
+                    for line in doc:
+                        s += line
+                    bot.send_message(message.chat.id, s)
                     tmp = []
             else:
                 conn = sql.connect("user_info")
                 c = conn.cursor()
-                g = c.execute("select gr from users where ids = ?", str(message.chat.id))
+                c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
+                g = c.fetchone()
                 gr = g[0]
                 s = gr+"_"+tmp[1]+"_"+message.text+".txt"
                 conn.close()
@@ -71,7 +77,7 @@ def all(message):
         elif len(tmp) == 4:
             s = tmp[3]
             doc = open(s, "w+")
-            doc.write(chat.username+" добавил :\n" + message.text)
+            doc.write(message.chat.username+" добавил :\n" + message.text)
             bot.send_message(message.chat.id, "ДЗ успешно добавлено.")
             tmp = []
         elif message.text == "Добавить домашнее задание":
@@ -84,7 +90,7 @@ def all(message):
             bot.send_message(message.chat.id,"Простите, я Вас не понимаю")
 def reg(bot,message,conn,c):
         c.execute("insert into users([ids]) values(?)", (message.chat.id,))
-        c.execute("update users set [gr] = ? where ids = ?",(message.text,message.chat.id))
+        c.execute("update users set [gr] = ? where [ids] = ?",(message.text,message.chat.id))
         bot.send_message(message.chat.id, "Вы успешно зарегистрировались")
         conn.commit()
         conn.close()
