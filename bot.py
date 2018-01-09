@@ -9,7 +9,7 @@ def file_exists(s):
         return False
     file.close()
     return True
-bot = telebot.TeleBot("TOKEN")
+bot = telebot.TeleBot("462731102:AAGR4-uk6AiaGQyQdR1OM9Lp4TxTl37XDOw")
 tmp = []
 lesson_id = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelvth','thirteenth','fourteenth','fifteenth','sixteenth','eighteenth','nineteenth','twentieth','twentyfirst','twentysecond','twentythird','twentyfourth','twentyfifth','twentysixth','twentyseventh','twentyeighth','twentyninth','thirtieth','thirtyfirst','thirtysecond','thirtythird','thirtyfourth','thirtyfifth']
 def day_of_week(d):
@@ -17,9 +17,10 @@ def day_of_week(d):
     return arr[d.weekday()]
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
- bot.reply_to(message, 'Приветствую, введите Вашу группу в формате "11МИ3"')
+ bot.reply_to(message, 'Приветствую, введите Вашу группу в формате 11МИ3')
 @bot.message_handler(content_types = ['text'])
 def all(message):
+        global tmp
         conn = sql.connect("user_info")
         c = conn.cursor()
         ch = False
@@ -30,10 +31,8 @@ def all(message):
             for j in range(len(i)):
                 if int(i[0]) == message.chat.id:
                     ch = True
-                    conn.commit()
-                    conn.close()
         if not ch:
-            reg(bot,message)
+            reg(bot,message,conn,c)
         elif len(tmp) == 1:
             arr = list(map(int,message.text.split(".")))
             arr.reverse()
@@ -49,7 +48,7 @@ def all(message):
             if tmp[0] == "get":
                 conn = sql.connect("user_info")
                 c = conn.cursor()
-                g = c.execute("select gr from users where ids = ?", str(message.chat.id))
+                g = c.execute("select gr from users where ids = ?", (str(message.chat.id)))
                 gr = g[0]
                 s = gr+"_"+tmp[1]+"_"+message.text+".txt"
                 conn.close()
@@ -79,12 +78,13 @@ def all(message):
             tmp.append("add")
             bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")
         elif message.text == "Узнать домашнее задание":
-            tmp.append("return")
+            tmp.append("get")
             bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")       
         else:
             bot.send_message(message.chat.id,"Простите, я Вас не понимаю")
 def reg(bot,message,conn,c):
-        c.execute("insert into users([ids],[gr]) values(?,?)", (message.chat.id, message.text))
+        c.execute("insert into users([ids]) values(?)", (message.chat.id,))
+        c.execute("update users set [gr] = ? where ids = ?",(message.text,message.chat.id))
         bot.send_message(message.chat.id, "Вы успешно зарегистрировались")
         conn.commit()
         conn.close()
