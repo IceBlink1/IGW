@@ -32,7 +32,7 @@ def all(message):
                 if int(i[0]) == message.chat.id:
                     ch = True
         if not ch:
-            reg(bot,message,conn,c)
+            reg_lc(bot,message,conn,c)
         elif len(tmp) == 1:
             arr = list(map(int,message.text.split(".")))
             arr.reverse()
@@ -45,7 +45,7 @@ def all(message):
                 s = "узнать"
             bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " домашнее задание")
         elif len(tmp) == 3:
-            if tmp[0] == "get":
+            if tmp[0] == "get_ht":
                 conn = sql.connect("user_info")
                 c = conn.cursor()
                 c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
@@ -64,7 +64,7 @@ def all(message):
                         s += line
                     bot.send_message(message.chat.id, s)
                 tmp = []
-            else:
+            elif tmp[0] == "add_ht":
                 conn = sql.connect("user_info")
                 c = conn.cursor()
                 c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
@@ -74,21 +74,59 @@ def all(message):
                 conn.close()
                 tmp.append(s)
                 bot.send_message(message.chat.id, "Введите текст домашнего задания")
+            elif tmp[0] == "get_n":
+                conn = sql.connect("user_info")
+                c = conn.cursor()
+                c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
+                g = c.fetchone()
+                gr = g[0]
+                s = gr+"_"+tmp[1]+"_"+message.text+"_note.txt"
+                print(s)
+                conn.close()
+                ch = file_exists(s)
+                if not ch:
+                    bot.send_message(message.chat.id, "На указанный урок нет заметки")
+                else:
+                    doc = open(s, 'r')
+                    s = ""
+                    for line in doc:
+                        s += line
+                    bot.send_message(message.chat.id, s)
+                tmp = []
+            elif tmp[0] == "add_n":
+                conn = sql.connect("user_info")
+                c = conn.cursor()
+                c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
+                g = c.fetchone()
+                gr = g[0]
+                s = gr+"_"+tmp[1]+"_"+message.text+"_note.txt"
+                conn.close()
+                tmp.append(s)
+                bot.send_message(message.chat.id, "Введите текст заметки")
         elif len(tmp) == 4:
             s = tmp[3]
-            doc = open(s, "w+")
-            doc.write(message.chat.username+" добавил :\n" + message.text)
-            bot.send_message(message.chat.id, "ДЗ успешно добавлено.")
+            doc = open(s, "a+")
+            doc.write(message.chat.username+" добавил:\n" + message.text+"\n")
+            if tmp[0] == "add_ht":
+                bot.send_message(message.chat.id, "ДЗ успешно добавлено.")
+            else:
+                bot.send_message(message.chat.id, "Заметка успешно добавлена.")
             tmp = []
         elif message.text == "Добавить домашнее задание":
-            tmp.append("add")
+            tmp.append("add_ht")
             bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")
         elif message.text == "Узнать домашнее задание":
-            tmp.append("get")
-            bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")       
+            tmp.append("get_ht")
+            bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")
+        elif message.text == "Добавить заметку":
+            tmp.append("add_n")
+            bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")
+        elif message.text == "Просмотреть заматеку":
+            tmp.append("get_n")
+            bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")
         else:
             bot.send_message(message.chat.id,"Простите, я Вас не понимаю")
-def reg(bot,message,conn,c):
+def reg_lc(bot,message,conn,c):
         c.execute("insert into users([ids]) values(?)", (message.chat.id,))
         c.execute("update users set [gr] = ? where [ids] = ?",(message.text,message.chat.id))
         bot.send_message(message.chat.id, "Вы успешно зарегистрировались")
