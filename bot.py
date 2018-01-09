@@ -9,7 +9,7 @@ def file_exists(s):
         return False
     file.close()
     return True
-bot = telebot.TeleBot("TOKEN")
+bot = telebot.TeleBot("539454566:AAGv8_PlmmzlJDIorbTPbiEbESvfbfyjvDM")
 tmp = []
 lesson_id = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelvth','thirteenth','fourteenth','fifteenth','sixteenth','eighteenth','nineteenth','twentieth','twentyfirst','twentysecond','twentythird','twentyfourth','twentyfifth','twentysixth','twentyseventh','twentyeighth','twentyninth','thirtieth','thirtyfirst','thirtysecond','thirtythird','thirtyfourth','thirtyfifth']
 def day_of_week(d):
@@ -63,7 +63,7 @@ def all(message):
                     for line in doc:
                         s += line
                     bot.send_message(message.chat.id, s)
-                    tmp = []
+                tmp = []
             else:
                 conn = sql.connect("user_info")
                 c = conn.cursor()
