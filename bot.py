@@ -1,4 +1,3 @@
-#todo adding and getting notes, getting timetable, checking groups, buttons 
 import telebot
 import datetime as dt
 import sqlite3 as sql
@@ -11,15 +10,33 @@ def file_exists(s):
     return True
 bot = telebot.TeleBot("TOKEN")
 tmp = []
-lesson_id = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelvth','thirteenth','fourteenth','fifteenth','sixteenth','eighteenth','nineteenth','twentieth','twentyfirst','twentysecond','twentythird','twentyfourth','twentyfifth','twentysixth','twentyseventh','twentyeighth','twentyninth','thirtieth','thirtyfirst','thirtysecond','thirtythird','thirtyfourth','thirtyfifth']
+cnt = 1
+markup = telebot.types.ReplyKeyboardMarkup(True, False)
+get_ht = telebot.types.KeyboardButton(text='Узнать домашнее задание')
+add_ht = telebot.types.KeyboardButton(text='Добавить домашнее задание')
+get_nt = telebot.types.KeyboardButton(text='Посмотреть заметку')
+add_nt = telebot.types.KeyboardButton(text='Добавить заметку')
+change_gr = telebot.types.KeyboardButton(text='Сбросить настройки аккаунта')
+c_dev = telebot.types.KeyboardButton(text='Связаться с разработчиком')
+markup.row(get_ht, add_ht)
+markup.row(get_nt, add_ht)
+markup.row(change_gr, c_dev)
+lesson_id = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelvth','thirteenth','fourteenth','fifteenth','sixteenth','eighteenth','nineteenth','twentieth','twentyfirst','twentysecond','twentythird','twentyfourth','twentyfifth','twentysixth','twentyseventh','twentyeighth','twentyninth','thirtieth','thirtyfirst','thirtysecond','thirtythird','thirtyfourth','thirtyfifth','thirtysixth','thirtyseventh','thirtyeighth','thirtyninth','fortyth','fortyfirst','fortysecond','fortythird','fortyfourth','fortyfifth','fortysixth','fortyseventh','fortyeighth','fortyninth','fiftyth']
 def day_of_week(d):
     arr = ["Понедельник", "Вторник", "Среда","Четверг","Пятница","Суббота","Воскресенье"]
     return arr[d.weekday()]
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
  bot.reply_to(message, 'Приветствую, введите Вашу группу в формате 11МИ3')
+"""
+@bot.message_handler(content_types = ['document'])
+def doc(message):
+    global tmp
+    global cnt
+    if len(tmp) ==
+"""
 @bot.message_handler(content_types = ['text'])
-def all(message):
+def text(message):
         global tmp
         conn = sql.connect("user_info")
         c = conn.cursor()
@@ -39,11 +56,21 @@ def all(message):
             d = dt.date(arr[0],arr[1],arr[2])
             tmp.append(message.text)
             tmp.append(day_of_week(d))
-            if tmp[0] == "add":
+            if tmp[2] == "Воскресенье" or tmp[2] == "Четверг":
+                bot.send_message(message.chat.id, "В этот день нет пар")
+                tmp = []
+            elif tmp[0] == "add_ht":
                 s = "добавить"
-            else:
+                bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " домашнее задание")
+            elif tmp[0] == "get_ht":
                 s = "узнать"
-            bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " домашнее задание")
+                bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " домашнее задание")
+            elif tmp[0] == "add_n":
+                s = "добавить"
+                bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " заметку")
+            elif tmp[0] == "get_n":
+                s = "узнать"
+                bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " заметку")
         elif len(tmp) == 3:
             if tmp[0] == "get_ht":
                 conn = sql.connect("user_info")
@@ -121,9 +148,13 @@ def all(message):
         elif message.text == "Добавить заметку":
             tmp.append("add_n")
             bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")
-        elif message.text == "Просмотреть заматеку":
+        elif message.text == "Посмотреть заметку":
             tmp.append("get_n")
             bot.send_message(message.chat.id, "Введите дату в формате 01.01.2018")
+        elif message.text == 'Связаться с разработчиком':
+            bot.send_message(message.chat.id, 'Связаться с разработчиком можно в Telegram @IceBlink1 либо по почте lyutiko.alex@gmail.com')
+        elif message.text == "Сбросить настройки аккаунта":
+            del_lc(bot,message,conn,c)
         else:
             bot.send_message(message.chat.id,"Простите, я Вас не понимаю")
 def reg_lc(bot,message,conn,c):
@@ -133,4 +164,10 @@ def reg_lc(bot,message,conn,c):
         conn.commit()
         conn.close()
         return None
+def del_lc(bot, message, conn, c):
+    c.execute("delete from users where [ids] = ?", (message.chat.id,))
+    bot.send_message(message.chat.id, "Данные успешно удалены. Для повторной регистрации отправьте номер новой группы")
+    conn.commit()
+    conn.close()
+    return None
 bot.polling()
