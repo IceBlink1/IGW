@@ -19,19 +19,22 @@ get_nt = types.KeyboardButton(text='Посмотреть заметку')
 add_nt = types.KeyboardButton(text='Добавить заметку')
 change_gr = types.KeyboardButton(text='Сбросить настройки аккаунта')
 c_dev = types.KeyboardButton(text='Связаться с разработчиком')
+get_tt = types.KeyboardButton(text = 'Узнать расписание')
 markup.row(get_ht, add_ht)
 markup.row(get_nt, add_nt)
+markup.row(get_tt)
 markup.row(change_gr, c_dev)
 bckbtn = types.KeyboardButton(text="Вернуться назад")
 mark = types.ReplyKeyboardMarkup(True, False, row_width = 1)
 mark.row(bckbtn)
+gr_arr = ["10В1","10В2","10Г1","10Г2","10Г3","10Г4","10Г5","10Д1","10Д2","10МИ1","10МИ2","10МИ3","10МИ4","10МИ5","11МИ1","11МИ2","11МИ3","11МЭ1","11МЭ2","11МЭ3","11МЭ4","11МЭ5","11МЭ6"]
 lesson_id = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelvth','thirteenth','fourteenth','fifteenth','sixteenth','eighteenth','nineteenth','twentieth','twentyfirst','twentysecond','twentythird','twentyfourth','twentyfifth','twentysixth','twentyseventh','twentyeighth','twentyninth','thirtieth','thirtyfirst','thirtysecond','thirtythird','thirtyfourth','thirtyfifth','thirtysixth','thirtyseventh','thirtyeighth','thirtyninth','fortyth','fortyfirst','fortysecond','fortythird','fortyfourth','fortyfifth','fortysixth','fortyseventh','fortyeighth','fortyninth','fiftyth']
 def day_of_week(d):
     arr = ["Понедельник", "Вторник", "Среда","Четверг","Пятница","Суббота","Воскресенье"]
     return arr[d.weekday()]
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
- bot.reply_to(message, 'Приветствую, введите Вашу группу в формате 11МИ3')
+     bot.reply_to(message, 'Приветствую, введите Вашу группу в формате 11МИ3')
 
 @bot.message_handler(content_types = ['photo'])
 def photo(message):
@@ -44,6 +47,7 @@ def photo(message):
             src = tmp[3]
             with open(src+".jpg","wb") as new_file:
                 new_file.write(down_file)
+    tmp = []
 @bot.message_handler(content_types = ['text'])
 def text(message):
         global markup
@@ -75,16 +79,16 @@ def text(message):
                 tmp = []
             elif tmp[0] == "add_ht":
                 s = "добавить"
-                bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " домашнее задание", reply_markup = mark)
+                bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " домашнее задание", reply_markup = mark)
             elif tmp[0] == "get_ht":
                 s = "узнать"
-                bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " домашнее задание",reply_markup = mark)
+                bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " домашнее задание",reply_markup = mark)
             elif tmp[0] == "add_n":
                 s = "добавить"
-                bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " заметку",reply_markup = mark)
+                bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " заметку",reply_markup = mark)
             elif tmp[0] == "get_n":
                 s = "узнать"
-                bot.send_message(message.chat.id, "Введите номер предмета, на который вы хотите " + s + " заметку",reply_markup = mark)
+                bot.send_message(message.chat.id, "Введите id, на который вы хотите " + s + " заметку",reply_markup = mark)
         elif len(tmp) == 3:
             if tmp[0] == "get_ht":
                 conn = sql.connect("user_info")
@@ -173,13 +177,57 @@ def text(message):
             bot.send_message(message.chat.id, 'Связаться с разработчиком можно в Telegram @IceBlink1 либо по почте lyutiko.alex@gmail.com',reply_markup = markup)
         elif message.text == "Сбросить настройки аккаунта":
             del_lc(bot,message,conn,c)
+        elif message.text == "Узнать расписание":
+            conn = sql.connect("user_info")
+            c = conn.cursor()
+            c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
+            g = c.fetchone()
+            gr = g[0]
+            s = g[0]+".txt"
+            ch = file_exists(s)
+            if not ch:
+                bot.send_message(message.chat.id, "Нет данных", reply_markup = markup)
+            else:
+                doc = open(s, 'r')
+                k = ""
+                cnt = 1
+                arr = ["Вторник", "Среда", "Пятница", "Суббота"]
+                for line in doc:
+                    try:
+                        line = int(line)
+                    except Exception as e:
+                        for i in arr:
+                            if i+"\n" == line and line != "Понедельник\n":
+                                cnt = 1
+                                bot.send_message(message.chat.id,k,reply_markup = markup)
+                                k = line
+                        if line == "Понедельник\n":
+                           k+=line
+                        elif line[0].isalpha():
+                            pass
+                        elif line == g[0]+'\n':
+                            k+=line
+                        elif line == "\n":
+                            pass
+                        else:
+                            k +=  line[0:-1]+" id = " + str(cnt) + " \n"
+                            cnt+=1
+                    print(line)
+                try:
+                    bot.send_message(message.chat.id, k, reply_markup = markup)
+                except Exception as o:
+                    print(o)
+                    bot.send_message(message.chat.id, "Бот перегружен, попробуйте позже", reply_markup = markup)
         else:
             bot.send_message(message.chat.id,"Простите, я Вас не понимаю",reply_markup = markup)
 def reg_lc(bot,message,conn,c):
         global markup
+        global gr_arr
         c.execute("insert into users([ids]) values(?)", (message.chat.id,))
         c.execute("update users set [gr] = ? where [ids] = ?",(message.text,message.chat.id))
         bot.send_message(message.chat.id, "Вы успешно зарегистрировались", reply_markup = markup)
+        if message.text not in gr_arr:
+            bot.send_message(message.chat.id, "ВНИМАНИЕ, ВАША ГРУППА ПОКА НЕ ПОДДЕРЖИВАЕТСЯ, ДАЛЬНЕЙШЕЕ ИСПОЛЬЗОВАНИЕ БОТА НА СВОЙ СТРАХ И РИСК")
         conn.commit()
         conn.close()
         return None
@@ -190,4 +238,3 @@ def del_lc(bot, message, conn, c):
     conn.close()
     return None
 bot.polling()
-
