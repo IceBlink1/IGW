@@ -32,13 +32,18 @@ def day_of_week(d):
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
  bot.reply_to(message, 'Приветствую, введите Вашу группу в формате 11МИ3')
-"""
-@bot.message_handler(content_types = ['document'])
-def doc(message):
+
+@bot.message_handler(content_types = ['photo'])
+def photo(message):
     global tmp
     global cnt
-    if len(tmp) ==
-"""
+    if len(tmp) == 4:
+            file_info = bot.get_file(message.photo[-1].file_id)
+            down_file = bot.download_file(file_info.file_path)
+            print(file_info)
+            src = tmp[3]
+            with open(src+".jpg","wb") as new_file:
+                new_file.write(down_file)
 @bot.message_handler(content_types = ['text'])
 def text(message):
         global markup
@@ -87,18 +92,22 @@ def text(message):
                 c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
                 g = c.fetchone()
                 gr = g[0]
-                s = gr+"_"+tmp[1]+"_"+message.text+".txt"
+                s = gr+"_"+tmp[1]+"_"+message.text
                 print(s)
                 conn.close()
-                ch = file_exists(s)
-                if not ch:
+                ch = file_exists(s+".txt")
+                chf = file_exists(s+".jpg")
+                if not ch and not chf:
                     bot.send_message(message.chat.id, "На указанный урок нет домашнего задания", reply_markup = markup)
-                else:
-                    doc = open(s, 'r')
-                    s = ""
+                if ch:
+                    doc = open(s+".txt", 'r')
+                    k = ""
                     for line in doc:
-                        s += line
-                    bot.send_message(message.chat.id, s,reply_markup = markup)
+                        k += line
+                    bot.send_message(message.chat.id, k,reply_markup = markup)
+                if chf:
+                    with open(s+'.jpg', 'rb') as f:
+                        bot.send_photo(message.chat.id, f, reply_markup= markup)
                 tmp = []
             elif tmp[0] == "add_ht":
                 conn = sql.connect("user_info")
@@ -106,7 +115,7 @@ def text(message):
                 c.execute("select [gr] from users where [ids] = (?)", (str(message.chat.id),))
                 g = c.fetchone()
                 gr = g[0]
-                s = gr+"_"+tmp[1]+"_"+message.text+".txt"
+                s = gr+"_"+tmp[1]+"_"+message.text
                 conn.close()
                 tmp.append(s)
                 bot.send_message(message.chat.id, "Введите текст домашнего задания",reply_markup = mark)
@@ -141,7 +150,7 @@ def text(message):
                 bot.send_message(message.chat.id, "Введите текст заметки",reply_markup = mark)
         elif len(tmp) == 4:
             s = tmp[3]
-            doc = open(s, "a+")
+            doc = open(s+".txt", "a+")
             doc.write(message.chat.username+" добавил:\n" + message.text+"\n")
             if tmp[0] == "add_ht":
                 bot.send_message(message.chat.id, "ДЗ успешно добавлено.",reply_markup = markup)
