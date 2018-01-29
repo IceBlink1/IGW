@@ -1,4 +1,5 @@
 import telebot
+import time
 from telebot import types
 import datetime as dt
 import sqlite3 as sql
@@ -9,7 +10,7 @@ def file_exists(s):
         return False
     file.close()
     return True
-bot = telebot.TeleBot("TOKEN")
+bot = telebot.TeleBot("539454566:AAGv8_PlmmzlJDIorbTPbiEbESvfbfyjvDM")
 tmp = []
 cnt = 1
 markup = types.ReplyKeyboardMarkup(True, False,row_width=1)
@@ -69,26 +70,31 @@ def text(message):
             tmp = []
             bot.send_message(message.chat.id, "Чем могу помочь?", reply_markup = markup)
         elif len(tmp) == 1:
-            arr = list(map(int,message.text.split(".")))
-            arr.reverse()
-            d = dt.date(arr[0],arr[1],arr[2])
-            tmp.append(message.text)
-            tmp.append(day_of_week(d))
-            if tmp[2] == "Воскресенье" or tmp[2] == "Четверг":
-                bot.send_message(message.chat.id, "В этот день нет пар", reply_markup = markup)
-                tmp = []
-            elif tmp[0] == "add_ht":
-                s = "добавить"
-                bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " домашнее задание", reply_markup = mark)
-            elif tmp[0] == "get_ht":
-                s = "узнать"
-                bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " домашнее задание",reply_markup = mark)
-            elif tmp[0] == "add_n":
-                s = "добавить"
-                bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " заметку",reply_markup = mark)
-            elif tmp[0] == "get_n":
-                s = "узнать"
-                bot.send_message(message.chat.id, "Введите id, на который вы хотите " + s + " заметку",reply_markup = mark)
+            try:
+                arr = list(map(int,message.text.split(".")))
+                arr.reverse()
+                d = dt.date(arr[0],arr[1],arr[2])
+                tmp.append(message.text)
+                tmp.append(day_of_week(d))
+                if tmp[2] == "Воскресенье" or tmp[2] == "Четверг":
+                    bot.send_message(message.chat.id, "В этот день нет пар", reply_markup = markup)
+                    tmp = []
+                elif tmp[0] == "add_ht":
+                    s = "добавить"
+                    bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " домашнее задание", reply_markup = mark)
+                elif tmp[0] == "get_ht":
+                    s = "узнать"
+                    bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " домашнее задание",reply_markup = mark)
+                elif tmp[0] == "add_n":
+                    s = "добавить"
+                    bot.send_message(message.chat.id, "Введите id предмета, на который вы хотите " + s + " заметку",reply_markup = mark)
+                elif tmp[0] == "get_n":
+                    s = "узнать"
+                    bot.send_message(message.chat.id, "Введите id, на который вы хотите " + s + " заметку",reply_markup = mark)
+            except Exception as e:
+                print(e)
+                bot.send_message(message.chat.id, "Некорректный формат данных, попробуйте снова", reply_markup = mark)
+          
         elif len(tmp) == 3:
             if tmp[0] == "get_ht":
                 conn = sql.connect("user_info")
@@ -237,4 +243,9 @@ def del_lc(bot, message, conn, c):
     conn.commit()
     conn.close()
     return None
-bot.polling()
+while True:
+    try:
+        bot.polling(none_stop = True)
+    except Exception as e:
+        logger.error(e)
+        time.sleep(15)
