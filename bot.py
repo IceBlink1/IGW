@@ -128,7 +128,7 @@ def text(message):
                 s = gr+"_"+tmp[1]+"_"+message.text
                 conn.close()
                 tmp.append(s)
-                bot.send_message(message.chat.id, "Введите текст домашнего задания",reply_markup = mark)
+                bot.send_message(message.chat.id, "Введите текст домашнего задания, либо отправьте фотографию. Обращаю внимание на факт, что фотография может быть только одна к каждому уроку, новые фотографии перезаписывают старые.",reply_markup = mark)
             elif tmp[0] == "get_n":
                 conn = sql.connect("user_info")
                 c = conn.cursor()
@@ -228,12 +228,9 @@ def text(message):
             bot.send_message(message.chat.id,"Простите, я Вас не понимаю",reply_markup = markup)
 def reg_lc(bot,message,conn,c):
         global markup
-        global gr_arr
         c.execute("insert into users([ids]) values(?)", (message.chat.id,))
         c.execute("update users set [gr] = ? where [ids] = ?",(message.text,message.chat.id))
         bot.send_message(message.chat.id, "Вы успешно зарегистрировались", reply_markup = markup)
-        if message.text not in gr_arr:
-            bot.send_message(message.chat.id, "ВНИМАНИЕ, ВАША ГРУППА ПОКА НЕ ПОДДЕРЖИВАЕТСЯ, ДАЛЬНЕЙШЕЕ ИСПОЛЬЗОВАНИЕ БОТА НА СВОЙ СТРАХ И РИСК")
         conn.commit()
         conn.close()
         return None
