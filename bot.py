@@ -12,8 +12,6 @@ def file_exists(s):
         return False
     file.close()
     return True
-lat2cyr = str.maketrans('МПЭЮДИСГ', 'MPEUDISG')
-cyr2lat = str.maketrans('MPEUDISG', 'МПЭЮДИСГ') 
 def sm(bot,chat,s,markup):
     try:
         bot.send_message(chat,s,reply_markup = markup)
@@ -47,8 +45,14 @@ def send_welcome(message):
 
 @bot.message_handler(content_types = ['photo'])
 def photo(message):
-    global tmp
-    global cnt
+    global markup
+    tmp = []
+    f = open(str(message.chat.id)+"_tmp.txt","r")
+    for line in f:
+            if line != "" or line != "\n":
+                tmp.append(line[:-1])
+                print(line)
+    f.close()
     if len(tmp) == 4:
             file_info = bot.get_file(message.photo[-1].file_id)
             down_file = bot.download_file(file_info.file_path)
@@ -59,10 +63,9 @@ def photo(message):
     f = open(str(message.chat.id)+"_tmp.txt","w")
     f.write("")
     f.close()
+    bot.send_message(message.chat.id, "Фотография успешно добавлена", reply_markup = markup)
 @bot.message_handler(content_types = ['text'])
 def text(message):
-        global lat2cyr
-        global cyr2lat
         global markup
         global mark
         tmp = []
@@ -196,7 +199,11 @@ def text(message):
         elif len(tmp) == 4:
             s = tmp[3]
             doc = open(s+".txt", "a+")
-            doc.write(message.chat.username+" добавил:\n" + message.text+"\n")
+            try:
+                doc.write(message.chat.username+" добавил:\n" + message.text+"\n")
+            except Exception as e:
+                print(e)
+                doc.write("Пользователь " + str(message.chat.id)+" добавил:\n" + message.text+"\n")        
             if tmp[0] == "add_ht":
                 sm(bot,message.chat.id, "ДЗ успешно добавлено.",markup)
             else:
@@ -287,7 +294,7 @@ def reg_lc(bot,message,conn,c):
         return None
 def del_lc(bot, message, conn, c):
     c.execute("delete from users where [ids] = ?", (message.chat.id,))
-    sm(bot,message.chat.id, "Данные успешно удалены. Для повторной регистрации отправьте номер новой группы")
+    sm(bot,message.chat.id, "Данные успешно удалены. Для повторной регистрации отправьте номер новой группы",markup)
     conn.commit()
     conn.close()
     return None
