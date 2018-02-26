@@ -34,7 +34,7 @@ markup.row(change_gr, c_dev)
 bckbtn = types.KeyboardButton(text="Вернуться назад")
 mark = types.ReplyKeyboardMarkup(True, False, row_width = 1)
 mark.row(bckbtn)
-gr_arr = ["10В1","10В2","10Г1","10Г2","10Г3","10Г4","10Г5","10Д1","10Д2","10МИ1","10МИ2","10МИ3","10МИ4","10МИ5","11МИ1","11МИ2","11МИ3","11МЭ1","11МЭ2","11МЭ3","11МЭ4","11МЭ5","11МЭ6"]
+gr_arr = ["10В1","10В2","10Г1","10Г2","10Г3","10Г4","10Г5","10Д1","10Д2","10МИ1","10МИ2","10МИ3","10МИ4","10МИ5","10МЭ1","10МЭ2","10МЭ3","10МЭ4","10МЭ5","10МЭ6","10П1","10П2","10СЭ1","10СЭ2","10СЭ3","10СЭ4","10СЭ5","10Ю1","10Ю2","11В1","11В2","11Г1","11Г2","11Г3","11Г4","11Г5","11Г6","11Д1","11Д2","11МИ1","11МИ2","11МИ3","11МЭ1","11МЭ2","11МЭ3","11МЭ4","11МЭ5","11МЭ6", "11П1","11П2","11СЭ1","11СЭ2","11СЭ3","11СЭ4","11СЭ5","11СЭ6","11СЭ7","11Ю1","11Ю2"]
 lesson_id = ['first','second','third','fourth','fifth','sixth','seventh','eighth','ninth','tenth','eleventh','twelvth','thirteenth','fourteenth','fifteenth','sixteenth','eighteenth','nineteenth','twentieth','twentyfirst','twentysecond','twentythird','twentyfourth','twentyfifth','twentysixth','twentyseventh','twentyeighth','twentyninth','thirtieth','thirtyfirst','thirtysecond','thirtythird','thirtyfourth','thirtyfifth','thirtysixth','thirtyseventh','thirtyeighth','thirtyninth','fortyth','fortyfirst','fortysecond','fortythird','fortyfourth','fortyfifth','fortysixth','fortyseventh','fortyeighth','fortyninth','fiftyth']
 def day_of_week(d):
     arr = ["Понедельник", "Вторник", "Среда","Четверг","Пятница","Суббота","Воскресенье"]
@@ -284,13 +284,17 @@ def text(message):
             sm(bot,message.chat.id,"Простите, я Вас не понимаю", markup)
 def reg_lc(bot,message,conn,c):
         global markup
-        c.execute("insert into users([ids]) values(?)", (message.chat.id,))
-        c.execute("update users set [gr] = ? where [ids] = ?",(message.text,message.chat.id))
-        sm(bot,message.chat.id, "Вы успешно зарегистрировались", markup)
-        conn.commit()
-        conn.close()
-        f = open(str(message.chat.id)+"_tmp.txt","w+")
-        f.close()
+        global gr_arr
+        if message.text in gr_arr:
+            c.execute("insert into users([ids]) values(?)", (message.chat.id,))
+            c.execute("update users set [gr] = ? where [ids] = ?",(message.text,message.chat.id))
+            sm(bot,message.chat.id, "Вы успешно зарегистрировались", markup)
+            conn.commit()
+            conn.close()
+            f = open(str(message.chat.id)+"_tmp.txt","w+")
+            f.close()
+        else:
+            bot.send_message(message.chat.id, "Нет данных о такой группе, попробуйте еще раз или свяжитесь с разработчиком")
         return None
 def del_lc(bot, message, conn, c):
     c.execute("delete from users where [ids] = ?", (message.chat.id,))
